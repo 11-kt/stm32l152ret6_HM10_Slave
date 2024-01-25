@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include "recieveData.h"
+#include "atDeviceSetup.h"
+#include "at_commands.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +48,7 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart4;
 
 /* USER CODE BEGIN PV */
-
+extern USART_buf usartBuffer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,6 +62,15 @@ static void MX_UART4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t i = 0;
+
+char *str2[] = {
+  "String1\r\n",
+  "String2\r\n",
+  "String3\r\n",
+  "String4\r\n",
+  "String5\r\n"
+};
 /* USER CODE END 0 */
 
 /**
@@ -91,7 +104,10 @@ int main(void)
   MX_TIM2_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
+  setupSlaveModule();
 
+  HAL_UART_Receive_IT(&huart4, (uint8_t *) usartBuffer.usart_buf, 1);
+  HAL_TIM_Base_Start_IT(&htim2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -269,6 +285,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+  if(huart==&huart4) UART4_RxCpltCallback();
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+	if(htim==&htim2) {
+		HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+		HAL_UART_Transmit(&huart4, (uint8_t *) str2[i], strlen(str2[i]), 0x1000);
+		i++;
+		if(i > 4) i = 0;
+  }
+}
 
 /* USER CODE END 4 */
 
