@@ -5,7 +5,7 @@
  *      Author: Andrianov Vitaly
  */
 
-#include "recieveData.h"
+#include "HM-10/recieveData.h"
 #include <string.h>
 
 char recievedData[60]={0};
