@@ -22,9 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <string.h>
-#include "recieveData.h"
-#include "atDeviceSetup.h"
-#include "at_commands.h"
+#include "HM-10/recieveData.h"
+#include "HM-10/HM10_Setup.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +45,7 @@
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart4;
+DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 extern USART_buf usartBuffer;
@@ -54,6 +54,7 @@ extern USART_buf usartBuffer;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 /* USER CODE BEGIN PFP */
@@ -101,13 +102,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM2_Init();
   MX_UART4_Init();
   /* USER CODE BEGIN 2 */
-  setupSlaveModule();
+  HAL_TIM_Base_Start(&htim2);
 
-  HAL_UART_Receive_IT(&huart4, (uint8_t *) usartBuffer.usart_buf, 1);
-  HAL_TIM_Base_Start_IT(&htim2);
+  if (setupSlave(&huart4) == OK) {
+	  HAL_GPIO_WritePin(led_GPIO_Port, led_Pin, 1);
+  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -139,7 +142,10 @@ void SystemClock_Config(void)
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
+  RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -149,7 +155,7 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
@@ -179,9 +185,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 11999;
+  htim2.Init.Prescaler = 31;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 200;
+  htim2.Init.Period = 65535;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -239,6 +245,22 @@ static void MX_UART4_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Channel3_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -270,14 +292,14 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = led_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(led_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ble_brk_Pin */
   GPIO_InitStruct.Pin = ble_brk_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   HAL_GPIO_Init(ble_brk_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -285,18 +307,18 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-  if(huart==&huart4) UART4_RxCpltCallback();
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-	if(htim==&htim2) {
-		HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-		HAL_UART_Transmit(&huart4, (uint8_t *) str2[i], strlen(str2[i]), 0x1000);
-		i++;
-		if(i > 4) i = 0;
-  }
-}
+//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+//  if(huart==&huart4) UART4_RxCpltCallback();
+//}
+//
+//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+//	if(htim==&htim2) {
+//		HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
+//		HAL_UART_Transmit(&huart4, (uint8_t *) str2[i], strlen(str2[i]), 0x1000);
+//		i++;
+//		if(i > 4) i = 0;
+//  }
+//}
 
 /* USER CODE END 4 */
 
