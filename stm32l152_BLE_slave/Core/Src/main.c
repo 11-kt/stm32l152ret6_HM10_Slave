@@ -24,6 +24,8 @@
 #include <string.h>
 #include "HM-10/recieveData.h"
 #include "HM-10/HM10_Setup.h"
+#include "st7789/cmsis_SPI1.h"
+#include "st7789/st7789.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -48,7 +50,6 @@ UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
-extern USART_buf usartBuffer;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -63,15 +64,6 @@ static void MX_UART4_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint8_t i = 0;
-
-char *str2[] = {
-  "String1\r\n",
-  "String2\r\n",
-  "String3\r\n",
-  "String4\r\n",
-  "String5\r\n"
-};
 /* USER CODE END 0 */
 
 /**
@@ -108,9 +100,14 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim2);
 
-  if (setupSlave(&huart4) == OK) {
-	  HAL_GPIO_WritePin(led_GPIO_Port, led_Pin, 1);
+  if (setupSlave(&huart4) != OK) {
+	  return 1;
   }
+
+  CMSIS_GPIO_init();
+  CMSIS_SPI1_init();
+  st7789_init();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -277,9 +274,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(led_GPIO_Port, led_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ble_brk_GPIO_Port, ble_brk_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : button_Pin */
@@ -288,18 +282,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(button_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : led_Pin */
-  GPIO_InitStruct.Pin = led_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  HAL_GPIO_Init(led_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : ble_brk_Pin */
   GPIO_InitStruct.Pin = ble_brk_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ble_brk_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -307,18 +294,6 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-//void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-//  if(huart==&huart4) UART4_RxCpltCallback();
-//}
-//
-//void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-//	if(htim==&htim2) {
-//		HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-//		HAL_UART_Transmit(&huart4, (uint8_t *) str2[i], strlen(str2[i]), 0x1000);
-//		i++;
-//		if(i > 4) i = 0;
-//  }
-//}
 
 /* USER CODE END 4 */
 
