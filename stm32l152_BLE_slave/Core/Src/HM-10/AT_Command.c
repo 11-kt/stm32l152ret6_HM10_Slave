@@ -17,7 +17,7 @@ struct AT_command AT_command_list[] = {
 		{"AT+IMME?\r\n", 8},
 		{"AT+IMME", 8},
 		{"AT+NAME?\r\n", -1},
-		{"AT+NAME", -1},
+		{"AT+NAME", 9},
 		{"AT+ROLE?\r\n", 8},
 		{"AT+ROLE", 8},
 		{"AT+START\r\n", 8}
