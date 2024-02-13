@@ -9,10 +9,10 @@
 #define INC_ST7789_H_
 
 #include "cmsis_SPI1.h"
-#include "utils/st7789_cmds.h"
+#include "st7789_cmds.h"
 #include "utils/colors.h"
-#include "utils/display_st7789.h"
-#include "utils/st7789_symbols.h"
+#include "display_st7789.h"
+#include "st7789_symbols.h"
 
 void st7789_init();
 void st7789_SendData(uint8_t data);
@@ -38,7 +38,7 @@ void st7789_ColumnSet(uint16_t colStart, uint16_t colEnd);
 void st7789_RowSet(uint16_t rowStart, uint16_t rowEnd);
 void st7789_DrawPixel(int16_t x, int16_t y, uint16_t color);
 void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, font_t* font, uint8_t fontIncrease, unsigned char ch);
-void st7789_print(uint16_t x, uint16_t y, uint16_t textColor, font_t* font, uint8_t fontIncrease, char *str);
+void st7789_PrintString(uint16_t x, uint16_t y, uint16_t textColor, font_t* font, uint8_t fontIncrease, char *str);
 
 #define		rgb565(r, g, b)		(((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3))
 
