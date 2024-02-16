@@ -183,7 +183,7 @@ void st7789_FillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
   st7789_RamWrite(&color, (h * w));
 }
 
-void st7789_DrawPixel(int16_t x, int16_t y, uint16_t color){
+void st7789_DrawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) ||(x >= WIDTH_st7789) || (y < 0) || (y >= HEIGHT_st7789)) return;
 
   st7789_SetWindow(x, y, x, y);
@@ -191,7 +191,7 @@ void st7789_DrawPixel(int16_t x, int16_t y, uint16_t color){
   st7789_RamWrite(&color, 1);
 }
 
-void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, font_t* font,uint8_t fontIncrease, unsigned char ch) {
+void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, uint16_t backgroundColor, uint8_t isBackgroundFill, font_t* font,uint8_t fontIncrease, unsigned char ch) {
 	uint32_t currentChar, nextX, nextY;
 	uint32_t currentX = x, currentY = y;
 
@@ -201,8 +201,11 @@ void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, font_t* font,ui
 	if (WIDTH_st7789 >= (x + font->fontWidth) || HEIGHT_st7789 >= (y + font->fontHeight)){
 		/* Go through font */
 		for (uint8_t i = 0; i < font->fontHeight; i++) {
+			/* if \n of \r */
+			if(ch == 10 || ch == 13)
+				currentChar = font->data[(162) * font->fontHeight + i];
 			/* if eng symbol */
-			if (ch < 127)
+			else if (ch < 127)
 				currentChar = font->data[(ch - 32) * font->fontHeight + i];
 			/* if rus symbol */
 			else if(ch > 191 )
@@ -220,6 +223,11 @@ void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, font_t* font,ui
 						for (nextX = 0; nextX < fontIncrease; nextX++) st7789_DrawPixel(currentX+nextX, currentY+nextY, textColor);
 					}
 				}
+				else if (isBackgroundFill) {
+					for (nextY = 0; nextY < fontIncrease; nextY++) {
+						for (nextX = 0; nextX < fontIncrease; nextX++) st7789_DrawPixel(currentX+nextX, currentY+nextY, backgroundColor);
+					}
+				}
 				currentX += fontIncrease;
 			}
 			currentX = x;
@@ -228,14 +236,15 @@ void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, font_t* font,ui
 	}
 }
 
-void st7789_PrintString(uint16_t x, uint16_t y, uint16_t textColor, font_t* font, uint8_t fontIncrease, char *str) {
+
+void st7789_PrintString(uint16_t x, uint16_t y, uint16_t textColor, uint16_t backgroundColor, uint8_t isBackgroundFill, font_t* font, uint8_t fontIncrease, char *str) {
 
 	if (fontIncrease < 1) fontIncrease = 1;
 
 	uint16_t len = strlen(str);
 
 	while (len--) {
-		st7789_DrawChar(x, y, textColor, font, fontIncrease, *str);
+		st7789_DrawChar(x, y, textColor, backgroundColor, isBackgroundFill, font, fontIncrease, *str);
 
 		x = x + (font->fontWidth * fontIncrease);
 

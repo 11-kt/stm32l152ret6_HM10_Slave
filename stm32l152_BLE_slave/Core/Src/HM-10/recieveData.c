@@ -6,31 +6,33 @@
  */
 
 #include "HM-10/recieveData.h"
-#include <string.h>
 
-char recievedData[60]={0};
-USART_buf usartBuffer;
+uint8_t rxBuf[rxBuf_SIZE];
+uint8_t subBuf[subBuf_SIZE];
+uint16_t oldPos = 0;
+uint16_t newPos = 0;
 
-void string_parse(char* buf_str) {
-  HAL_UART_Transmit(&huart4,(uint8_t*) buf_str, strlen(buf_str), 0x1000);
-  HAL_GPIO_TogglePin(led_GPIO_Port, led_Pin);
-}
+void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
+	oldPos = newPos;
+	if (oldPos + size > subBuf_SIZE) {
+		uint16_t dataToCopy = subBuf_SIZE - oldPos;
 
-void UART4_RxCpltCallback(void) {
-  uint8_t sub = recievedData[0];
-  if (usartBuffer.usart_cnt > 59) {
-	  usartBuffer.usart_cnt = 0;
-	  HAL_UART_Receive_IT(&huart4, (uint8_t*) recievedData, 1);
-	  return;
-  }
-  usartBuffer.usart_buf[usartBuffer.usart_cnt] = sub;
-  if(sub == 0x0A) {
-	  usartBuffer.usart_buf[usartBuffer.usart_cnt + 1] = 0;
-	  string_parse((char *) usartBuffer.usart_buf);
-	  usartBuffer.usart_cnt = 0;
-	  HAL_UART_Receive_IT(&huart4, (uint8_t *) recievedData, 1);
-	  return;
-  }
-  usartBuffer.usart_cnt++;
-  HAL_UART_Receive_IT(&huart4, (uint8_t *) recievedData, 1);
+		memcpy((uint8_t *) subBuf + oldPos, rxBuf, dataToCopy);
+
+		oldPos = 0;
+
+		memcpy((uint8_t *) subBuf, (uint8_t *) rxBuf + dataToCopy, (size-dataToCopy));
+
+		newPos = size - dataToCopy;
+	}
+	else {
+		memcpy((uint8_t *) subBuf + oldPos, rxBuf, size);
+		newPos = size + oldPos;
+	}
+
+	st7789_SetWindow(20, 20, 240, 320);
+	st7789_PrintString(20, 20, GREEN_st7789, BLACK_st7789, 1, &font_7x9, 1, rxBuf);
+
+	HAL_UARTEx_ReceiveToIdle_DMA(huart, (uint8_t *) rxBuf, rxBuf_SIZE);
+	__HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
 }

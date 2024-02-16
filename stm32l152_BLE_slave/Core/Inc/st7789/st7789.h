@@ -37,8 +37,8 @@ void st7789_SetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1);
 void st7789_ColumnSet(uint16_t colStart, uint16_t colEnd);
 void st7789_RowSet(uint16_t rowStart, uint16_t rowEnd);
 void st7789_DrawPixel(int16_t x, int16_t y, uint16_t color);
-void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, font_t* font, uint8_t fontIncrease, unsigned char ch);
-void st7789_PrintString(uint16_t x, uint16_t y, uint16_t textColor, font_t* font, uint8_t fontIncrease, char *str);
+void st7789_DrawChar(uint16_t x, uint16_t y, uint16_t textColor, uint16_t backgroundColor, uint8_t isBackgroundFill, font_t* font, uint8_t fontIncrease, unsigned char ch);
+void st7789_PrintString(uint16_t x, uint16_t y, uint16_t textColor, uint16_t backgroundColor, uint8_t isBackgroundFill, font_t* font, uint8_t fontIncrease, char *str);
 
 #define		rgb565(r, g, b)		(((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3))
 

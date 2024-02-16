@@ -10,15 +10,13 @@
 
 #include "stm32l1xx_hal.h"
 #include "main.h"
+#include "st7789/st7789.h"
 
-extern UART_HandleTypeDef huart4;
+#define 	rxBuf_SIZE		128
+#define		subBuf_SIZE		256
 
-typedef struct {
-  uint8_t usart_buf[60];
-  uint8_t usart_cnt;
-} USART_buf;
+extern DMA_HandleTypeDef hdma_uart4_rx;
 
-void string_parse(char* buf_str);
-void UART4_RxCpltCallback(void);
+void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size);
 
 #endif /* INC_RECIEVEDATA_H_ */
