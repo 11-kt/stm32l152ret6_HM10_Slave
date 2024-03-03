@@ -111,9 +111,9 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim2);
 
-  if (setupSlave(&huart4) != OK) {
-	  return 1;
-  }
+//  if (setupSlave(&huart4) != OK) {
+//	  return 1;
+//  }
 
   CMSIS_GPIO_init();
   CMSIS_SPI1_init();
@@ -123,6 +123,13 @@ int main(void)
   __HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
 
   HAL_TIM_Base_Start_IT(&htim3);
+
+  st7789_PrintString(20, 20, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Состояние:");
+  st7789_PrintString(140, 20, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не связан");
+  st7789_PrintString(20, 50, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.:");
+  st7789_PrintString(20, 70, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI:");
+  st7789_PrintString(20, 110, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Кол-во принятых байт:");
+  st7789_PrintString(20, 90, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщ.:");
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -156,7 +163,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
   RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -197,9 +204,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 31;
+  htim2.Init.Prescaler = 11999;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 65535;
+  htim2.Init.Period = 200;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -284,7 +291,7 @@ static void MX_UART4_Init(void)
 
   /* USER CODE END UART4_Init 1 */
   huart4.Instance = UART4;
-  huart4.Init.BaudRate = 57600;
+  huart4.Init.BaudRate = 115200;
   huart4.Init.WordLength = UART_WORDLENGTH_8B;
   huart4.Init.StopBits = UART_STOPBITS_1;
   huart4.Init.Parity = UART_PARITY_NONE;
@@ -329,24 +336,18 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ble_brk_GPIO_Port, ble_brk_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : button_Pin */
-  GPIO_InitStruct.Pin = button_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(button_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ble_brk_Pin */
   GPIO_InitStruct.Pin = ble_brk_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ble_brk_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */

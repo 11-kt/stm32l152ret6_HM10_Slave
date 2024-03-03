@@ -31,7 +31,7 @@ void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	}
 
 	st7789_SetWindow(20, 20, 240, 320);
-	st7789_PrintString(20, 20, GREEN_st7789, BLACK_st7789, 1, &font_7x9, 1, rxBuf);
+	st7789_PrintString(20, 20, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, &rxBuf);
 
 	HAL_UARTEx_ReceiveToIdle_DMA(huart, (uint8_t *) rxBuf, rxBuf_SIZE);
 	__HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
