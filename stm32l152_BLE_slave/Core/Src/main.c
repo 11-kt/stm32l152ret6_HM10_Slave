@@ -53,8 +53,7 @@ DMA_HandleTypeDef hdma_uart4_rx;
 /* USER CODE BEGIN PV */
 uint8_t i = 0;
 uint8_t isConnected = 0;
-uint8_t isTemp = 1;
-uint8_t isRSSI = 0;
+volatile uint8_t isTemp = 0;
 
 char *txStr[] = {
   "String1\r\n",
@@ -124,12 +123,19 @@ int main(void)
   CMSIS_SPI1_init();
   st7789_init();
 
-  st7789_PrintString(20, 20, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Состояние:");
-  st7789_PrintString(140, 20, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не связан");
-  st7789_PrintString(20, 50, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.C:");
-  st7789_PrintString(20, 80, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
-  st7789_PrintString(20, 110, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Кол-во принятых байт:");
-  st7789_PrintString(20, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщ.:");
+  st7789_PrintString(20, 10, MAGENTA_st7789, WHITE_st7789, 1, &font_11x18, 1, "Slave mode");
+  st7789_PrintString(190, 10, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не сопряжен");
+
+  st7789_PrintString(20, 35, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.C:");
+  st7789_PrintString(20, 55, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальная темп.C:");
+  st7789_PrintString(20, 75, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная темп.C:");
+
+  st7789_PrintString(20, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
+  st7789_PrintString(20, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальный RSSI,dbm:");
+  st7789_PrintString(20, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная RSSI,dbm:");
+
+  st7789_PrintString(20, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Num RX/TX:");
+  st7789_PrintString(20, 185, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщ.:");
 
   if (setupSlave(&huart4, ble_brk_GPIO_Port, ble_brk_Pin) != OK) {
 	  st7789_FillRect(0, 0,  320, 240, WHITE_st7789);
@@ -431,7 +437,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			if (isTemp) {
 				HAL_UART_Transmit(&huart4, getCommand(TEMP_GET), strlen((char *) getCommand(TEMP_GET)), 0xFFFF);
 			}
-			if (isRSSI) {
+			else {
 				HAL_UART_Transmit(&huart4, getCommand(RSSI_GET), strlen((char *) getCommand(RSSI_GET)), 0xFFFF);
 			}
 		}

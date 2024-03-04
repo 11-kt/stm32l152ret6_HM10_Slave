@@ -38,8 +38,7 @@ extern "C" {
 /* USER CODE BEGIN ET */
 extern uint8_t rxBuf[];
 extern uint8_t isConnected;
-extern uint8_t isTemp;
-extern uint8_t isRSSI;
+extern volatile uint8_t isTemp;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
