@@ -11,6 +11,7 @@
 #include "stm32l1xx_hal.h"
 #include "main.h"
 #include "st7789/st7789.h"
+#include <string.h>
 
 #define 	rxBuf_SIZE		128
 #define		subBuf_SIZE		256
@@ -18,5 +19,6 @@
 extern DMA_HandleTypeDef hdma_uart4_rx;
 
 void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size);
+void clearingRXBuf();
 
 #endif /* INC_RECIEVEDATA_H_ */

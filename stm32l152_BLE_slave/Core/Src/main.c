@@ -45,12 +45,16 @@
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart4;
 DMA_HandleTypeDef hdma_uart4_rx;
 
 /* USER CODE BEGIN PV */
 uint8_t i = 0;
+uint8_t isConnected = 0;
+uint8_t isTemp = 1;
+uint8_t isRSSI = 0;
 
 char *txStr[] = {
   "String1\r\n",
@@ -59,6 +63,9 @@ char *txStr[] = {
   "String4\r\n",
   "String5\r\n"
 };
+
+char temp[10] = {'\0'};
+char rssi[10] = {'\0'};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,6 +75,7 @@ static void MX_DMA_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_UART4_Init(void);
 static void MX_TIM3_Init(void);
+static void MX_TIM4_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -108,28 +116,33 @@ int main(void)
   MX_TIM2_Init();
   MX_UART4_Init();
   MX_TIM3_Init();
+  MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start(&htim2);
-
-//  if (setupSlave(&huart4) != OK) {
-//	  return 1;
-//  }
 
   CMSIS_GPIO_init();
   CMSIS_SPI1_init();
   st7789_init();
+
+  st7789_PrintString(20, 20, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Состояние:");
+  st7789_PrintString(140, 20, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не связан");
+  st7789_PrintString(20, 50, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.C:");
+  st7789_PrintString(20, 80, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
+  st7789_PrintString(20, 110, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Кол-во принятых байт:");
+  st7789_PrintString(20, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщ.:");
+
+  if (setupSlave(&huart4, ble_brk_GPIO_Port, ble_brk_Pin) != OK) {
+	  st7789_FillRect(0, 0,  320, 240, WHITE_st7789);
+	  st7789_PrintString(50, 90, RED_st7789, WHITE_st7789, 1, &font_11x18, 2, "Ошибка BLE");
+  }
 
   HAL_UARTEx_ReceiveToIdle_DMA(&huart4, rxBuf, rxBuf_SIZE);
   __HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
 
   HAL_TIM_Base_Start_IT(&htim3);
 
-  st7789_PrintString(20, 20, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Состояние:");
-  st7789_PrintString(140, 20, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не связан");
-  st7789_PrintString(20, 50, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.:");
-  st7789_PrintString(20, 70, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI:");
-  st7789_PrintString(20, 110, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Кол-во принятых байт:");
-  st7789_PrintString(20, 90, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщ.:");
+  HAL_TIM_Base_Start_IT(&htim4);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -159,11 +172,12 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
   RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -204,9 +218,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 11999;
+  htim2.Init.Prescaler = 31;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 200;
+  htim2.Init.Period = 65535;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -276,6 +290,51 @@ static void MX_TIM3_Init(void)
 }
 
 /**
+  * @brief TIM4 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM4_Init(void)
+{
+
+  /* USER CODE BEGIN TIM4_Init 0 */
+
+  /* USER CODE END TIM4_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM4_Init 1 */
+
+  /* USER CODE END TIM4_Init 1 */
+  htim4.Instance = TIM4;
+  htim4.Init.Prescaler = 31999;
+  htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim4.Init.Period = 2500;
+  htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim4, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim4, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM4_Init 2 */
+
+  /* USER CODE END TIM4_Init 2 */
+
+}
+
+/**
   * @brief UART4 Initialization Function
   * @param None
   * @retval None
@@ -336,7 +395,6 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
@@ -367,6 +425,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 		i++;
 		if(i > 4) i = 0;
 	}
+
+	if(htim==&htim4) {
+		if (isConnected) {
+			if (isTemp) {
+				HAL_UART_Transmit(&huart4, getCommand(TEMP_GET), strlen((char *) getCommand(TEMP_GET)), 0xFFFF);
+			}
+			if (isRSSI) {
+				HAL_UART_Transmit(&huart4, getCommand(RSSI_GET), strlen((char *) getCommand(RSSI_GET)), 0xFFFF);
+			}
+		}
+	}
+
 }
 /* USER CODE END 4 */
 

@@ -20,9 +20,9 @@ static char dma_res[30]; // DMA receive buffer
 setup_result setupSlave(UART_HandleTypeDef *huart, GPIO_TypeDef *brk_port, uint16_t brk_Pin) {
 
 	HAL_GPIO_WritePin(brk_port, brk_Pin, RESET);
-	usDelay(delayUs);
+	HAL_Delay(105);
 	HAL_GPIO_WritePin(brk_port, brk_Pin, SET);
-	usDelay(delayUs);
+	HAL_Delay(105);
 
 	setup_result connection = checkConnection(huart);
 	if (connection != OK) {
@@ -70,9 +70,9 @@ setup_result setupSlave(UART_HandleTypeDef *huart, GPIO_TypeDef *brk_port, uint1
 setup_result setupMaster(UART_HandleTypeDef *huart, GPIO_TypeDef *brk_port, uint16_t brk_Pin) {
 
 	HAL_GPIO_WritePin(brk_port, brk_Pin, RESET);
-	usDelay(delayUs);
+	usDelay(2*delayUs);
 	HAL_GPIO_WritePin(brk_port, brk_Pin, SET);
-	usDelay(delayUs);
+	usDelay(2*delayUs);
 
 	setup_result connection = checkConnection(huart);
 	if (connection != OK) {
@@ -488,8 +488,13 @@ void getTemp(UART_HandleTypeDef *huart, char* temp_str) {
 		else if (i > 0 && dma_res[i - 1] == ':') dotFlag = 1;
 
 		if (dotFlag) {
-			temp_str[currentChar] = dma_res[i];
-			currentChar++;
+			if (dma_res[i] == '0' && currentChar == 0) {
+
+			}
+			else {
+				temp_str[currentChar] = dma_res[i];
+				currentChar++;
+			}
 		}
 	}
 }
