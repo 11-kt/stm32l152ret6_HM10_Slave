@@ -19,6 +19,7 @@ char minRSSI[10] = "999";
 char maxRSSI[10] = "-250";
 
 void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
+	__disable_irq();
 	oldPos = newPos;
 	if (oldPos + size > subBuf_SIZE) {
 		uint16_t dataToCopy = subBuf_SIZE - oldPos;
@@ -38,13 +39,13 @@ void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
 
 	if (strcmp ((char *) rxBuf, (char *) "OK+CONN\r\n") == 0) {
 		st7789_FillRect(170, 10, 150, 20, WHITE_st7789);
-		st7789_PrintString(190, 10, BLACK_st7789, GREEN_st7789, 1, &font_11x18, 1, "Сопряжен");
+		st7789_PrintString(220, 10, BLACK_st7789, GREEN_st7789, 1, &font_11x18, 1, "Сопряжен");
 		isConnected = 1;
 		clearingRXBuf();
 	}
 	else if (strcmp ((char *) rxBuf, (char *) "OK+LOST\r\n") == 0) {
-		st7789_FillRect(190, 10, 150, 20, WHITE_st7789);
-		st7789_PrintString(190, 10, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не сопряжен");
+		st7789_FillRect(185, 10, 150, 20, WHITE_st7789);
+		st7789_PrintString(185, 10, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не сопряжен");
 		clearingRXBuf();
 	}
 	else if (rxBuf[0] == 'O' && rxBuf[1] == 'K' && rxBuf[2] == '+') {
@@ -97,6 +98,7 @@ void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	}
 	HAL_UARTEx_ReceiveToIdle_DMA(huart, (uint8_t *) rxBuf, rxBuf_SIZE);
 	__HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
+	__enable_irq();
 }
 
 void clearingRXBuf() {
