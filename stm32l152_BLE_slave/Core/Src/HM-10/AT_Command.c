@@ -11,7 +11,7 @@
   * available AT_command array
  */
 struct AT_command AT_command_list[] = {
-		{"AT\r\n", 2},
+		{"AT", 2},
 		{"AT+RESET\r\n", 8},
 		{"AT+RENEW\r\n", 8},
 		{"AT+BAUD?\r\n", 8},
