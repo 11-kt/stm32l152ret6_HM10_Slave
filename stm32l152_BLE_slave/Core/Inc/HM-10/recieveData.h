@@ -12,6 +12,7 @@
 #include "main.h"
 #include "st7789/st7789.h"
 #include <string.h>
+#include <stdio.h>
 
 #define 	rxBuf_SIZE		128
 #define		subBuf_SIZE		256

@@ -18,8 +18,19 @@ char maxTemp[10] = "-50.50";
 char minRSSI[10] = "999";
 char maxRSSI[10] = "-250";
 
+uint8_t currPongTx = -1;
+uint16_t currPingRx = -1;
+uint8_t loss = 0;
+const char * pong = "pong";
+const char * ping = "ping";
+char currTxBuf[50];
+char currRxBuf[50];
+char stats[50];
+char currPongTxStr[20];
+char currPingRxStr[20];
+char currLossStr[20] = "0";
+
 void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
-	__disable_irq();
 	oldPos = newPos;
 	if (oldPos + size > subBuf_SIZE) {
 		uint16_t dataToCopy = subBuf_SIZE - oldPos;
@@ -92,13 +103,38 @@ void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
 		clearingRXBuf();
 	}
 	else {
+		currPingRx++;
+		snprintf(currPingRxStr, sizeof(currPingRxStr), "%d", currPingRx);
+		strcat(currRxBuf, ping);
+		strcat(currRxBuf, currPingRxStr);
+		if (strstr (currRxBuf, (char *) rxBuf) == NULL) {
+			loss++;
+			snprintf(currLossStr, sizeof(currLossStr), "%d", loss);
+		}
+
+		currPongTx++;
+		snprintf(currPongTxStr, sizeof(currPongTxStr), "%d", currPongTx);
+		strcat(currTxBuf, pong);
+		strcat(currTxBuf, currPongTxStr);
+		HAL_UART_Transmit(huart, (uint8_t *) currTxBuf, 50, 0xFFFF);
+
 		st7789_FillRect(0, 210, 320, 20, WHITE_st7789);
 		st7789_PrintString(20, 210, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, (char *) rxBuf);
 		clearingRXBuf();
+
+		strcat(stats, currPingRxStr);
+		strcat(stats, "/");
+		strcat(stats, currPongTxStr);
+		strcat(stats, "/");
+		strcat(stats, currLossStr);
+		st7789_PrintString(160, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, stats);
+		memset(stats, 0, 50);
+		memset(currTxBuf, 0, 50);
+		memset(currRxBuf, 0, 50);
+		memset(currPongTxStr, 0, 20);
 	}
 	HAL_UARTEx_ReceiveToIdle_DMA(huart, (uint8_t *) rxBuf, rxBuf_SIZE);
 	__HAL_DMA_DISABLE_IT(&hdma_uart4_rx, DMA_IT_HT);
-	__enable_irq();
 }
 
 void clearingRXBuf() {
