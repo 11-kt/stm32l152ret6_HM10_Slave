@@ -21,5 +21,9 @@ extern DMA_HandleTypeDef hdma_uart4_rx;
 
 void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size);
 void clearingRXBuf();
+void connEvent();
+void connLostEvent();
+void getTempRssiEvent();
+void getMsgEvent(UART_HandleTypeDef *huart);
 
 #endif /* INC_RECIEVEDATA_H_ */

@@ -55,7 +55,9 @@ extern volatile uint8_t isTemp;
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void st7789_DrawStartScreen();
+void st7789_DrawErrScreen();
+void st7789_DrawDataScreen();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
