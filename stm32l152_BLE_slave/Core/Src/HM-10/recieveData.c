@@ -111,7 +111,7 @@ void getTempRssiEvent() {
 			}
 		}
 	}
-	if (isTemp == 1) {
+	if (msgType == 0) {
 		if (strcmp( maxTemp, res_str ) < 0) {
 			strncpy(maxTemp, res_str, 10);
 			st7789_PrintString(250, 75, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxTemp);
@@ -121,9 +121,9 @@ void getTempRssiEvent() {
 			st7789_PrintString(250, 55, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minTemp);
 		}
 		st7789_PrintString(250, 35, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
-		isTemp = 0;
+		msgType++;
 	}
-	else {
+	else if (msgType == 4) {
 		if (strcmp( maxRSSI, res_str ) < 0) {
 			strncpy(maxRSSI, res_str, 10);
 			st7789_PrintString(270, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxRSSI);
@@ -133,12 +133,15 @@ void getTempRssiEvent() {
 			st7789_PrintString(270, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minRSSI);
 		}
 		st7789_PrintString(270, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
-		isTemp = 1;
+		msgType++;
 	}
 	clearingRXBuf();
 }
 
 void getMsgEvent(UART_HandleTypeDef *huart) {
+	msgType++;
+	if (msgType == 8) msgType = 0;
+
 	currPingRx++;
 	snprintf(currPingRxStr, sizeof(currPingRxStr), "%d", currPingRx);
 	strcat(currRxBuf, ping);
