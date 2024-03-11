@@ -24,7 +24,7 @@
 #include <string.h>
 #include "HM-10/recieveData.h"
 #include "HM-10/HM10_Setup.h"
-#include "st7789/cmsis_SPI1.h"
+#include "st7789/st7789_Views/st7789_Data_Views.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -250,7 +250,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 31999;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 3000;
+  htim4.Init.Period = 2000;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -366,7 +366,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 				case 0:
 					HAL_UART_Transmit(&huart4, getCommand(TEMP_GET), strlen((char *) getCommand(TEMP_GET)), 0xFFFF);
 					break;
-				case 4:
+				case 3:
 					HAL_UART_Transmit(&huart4, getCommand(RSSI_GET), strlen((char *) getCommand(RSSI_GET)), 0xFFFF);
 					break;
 				default:
@@ -374,33 +374,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 			}
 		}
 	}
-}
-
-void st7789_DrawStartScreen() {
-	st7789_PrintString(20, 70, BLUE_st7789, WHITE_st7789, 1, &font_11x18, 2, "Инициализация");
-	st7789_PrintString(130, 120, BLUE_st7789, WHITE_st7789, 1, &font_11x18, 2, "BLE");
-}
-
-void st7789_DrawErrScreen() {
-	st7789_FillRect(0, 0,  320, 240, WHITE_st7789);
-	st7789_PrintString(50, 90, RED_st7789, WHITE_st7789, 1, &font_11x18, 2, "Ошибка BLE");
-}
-
-void st7789_DrawDataScreen() {
-	st7789_FillRect(0, 0,  320, 240, WHITE_st7789);
-	st7789_PrintString(20, 10, MAGENTA_st7789, WHITE_st7789, 1, &font_11x18, 1, "Slave mode");
-	st7789_PrintString(185, 10, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не сопряжен");
-
-	st7789_PrintString(20, 35, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.C:");
-	st7789_PrintString(20, 55, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальная темп.C:");
-	st7789_PrintString(20, 75, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная темп.C:");
-
-	st7789_PrintString(20, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
-	st7789_PrintString(20, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальный RSSI,dbm:");
-	st7789_PrintString(20, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная RSSI,dbm:");
-
-	st7789_PrintString(20, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "RX/TX/Loss:");
-	st7789_PrintString(20, 185, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщение:");
 }
 
 /* USER CODE END 4 */
