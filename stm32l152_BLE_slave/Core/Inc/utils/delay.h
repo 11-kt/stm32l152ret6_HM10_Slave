@@ -12,6 +12,6 @@
 
 extern TIM_HandleTypeDef htim2;
 
-void usDelay(uint32_t us);
+void usDelay(uint32_t us); // microsec Delay (based tim2)
 
 #endif /* INC_UTILS_DELAY_H_ */

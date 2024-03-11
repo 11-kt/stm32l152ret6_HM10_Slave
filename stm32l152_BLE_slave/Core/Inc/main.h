@@ -37,6 +37,8 @@ extern "C" {
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
 extern uint8_t rxBuf[];
+extern uint8_t isConnected;
+extern volatile uint8_t msgType;
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -53,12 +55,12 @@ extern uint8_t rxBuf[];
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void st7789_DrawStartScreen();
+void st7789_DrawErrScreen();
+void st7789_DrawDataScreen();
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define button_Pin GPIO_PIN_13
-#define button_GPIO_Port GPIOC
 #define ble_brk_Pin GPIO_PIN_12
 #define ble_brk_GPIO_Port GPIOC
 
