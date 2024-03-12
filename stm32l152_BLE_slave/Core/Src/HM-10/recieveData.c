@@ -20,8 +20,8 @@
 	char minRSSI[10] = "999";				// min RSSI buffer
 	char maxRSSI[10] = "-250";				// max RSSI buffer
 //---------------------------------------------------------------------------------------------------//
-	uint8_t currPongTx = -1;				// current num of transmitted data
-	uint8_t currPingRx = -1;				// current num of received data
+	uint16_t currPongTx = -1;				// current num of transmitted data
+	uint16_t currPingRx = -1;				// current num of received data
 	uint16_t countOfRxData;					// amount of received data
 	uint16_t countOfTxData;					// amount of transmitted data
 	uint16_t loss = 0;						// current num of lost data
@@ -208,6 +208,9 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 	/* 0 - temp, 1,2 - data, 3 - rssi, 4,5 - data */
 	if (msgType == 5) msgType = 0;
 	/* Create current expected received string */
+	if (currPingRx % 256 == 0) {
+		memset(rxDataControlList, 0, 255);
+	}
 	currPingRx++;
 	snprintf(currPingRxStr, sizeof(currPingRxStr), "%d", currPingRx);
 	strcat(currRxBuf, ping);
@@ -217,32 +220,54 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 		rxBufNumStr[i-4] = rxBuf[i];
 	}
 	rxBufNum = atoi(rxBufNumStr);
-	/* Mark received string in rxDataControlList*/
-	rxDataControlList[rxBufNum] = 1;
-	uint8_t lostPocket = 0;
-	for (uint8_t j=0; j < currPingRx; j++) {
-		if (rxDataControlList[j] == 0) lostPocket++;
+	/* if get previous message */
+	if (rxBufNum < currPingRx) {
+		/* Mark received string in rxDataControlList*/
+		rxDataControlList[rxBufNum] = 1;
+		uint8_t lostPocket = 0;
+		for (uint8_t j=0; j < currPingRx % 256; j++) {
+			if (rxDataControlList[j] == 0) lostPocket++;
+		}
+		snprintf(currLossStr, sizeof(currLossStr), "%d", lostPocket);
+		currPingRx--;
+		memset(rxBufNumStr, 0, 50);
+		/* Display RX/TX/LOSS stats to user */
+		strcat(stats, currPingRxStr);
+		strcat(stats, "/");
+		strcat(stats, currPongTxStr);
+		strcat(stats, "/");
+		strcat(stats, currLossStr);
+		st7789_PrintString(160, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, stats);
 	}
-	snprintf(currLossStr, sizeof(currLossStr), "%d", lostPocket);
-	memset(rxBufNumStr, 0, 50);
-	/* Create current transmit data */
-	currPongTx++;
-	snprintf(currPongTxStr, sizeof(currPongTxStr), "%d", currPongTx);
-	strcat(currTxBuf, pong);
-	strcat(currTxBuf, currPongTxStr);
-	/* Transmit created data */
-	HAL_UART_Transmit(huart, (uint8_t *) currTxBuf, 50, 0xFFFF);
-	/* Display current received data to user */
-	st7789_FillRect(0, 210, 320, 20, WHITE_st7789);
-	st7789_PrintString(20, 210, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, (char *) rxBuf);
-	clearingRXBuf();
-	/* Display RX/TX/LOSS stats to user */
-	strcat(stats, currPingRxStr);
-	strcat(stats, "/");
-	strcat(stats, currPongTxStr);
-	strcat(stats, "/");
-	strcat(stats, currLossStr);
-	st7789_PrintString(160, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, stats);
+	/* if get new message */
+	else {
+		/* Mark received string in rxDataControlList*/
+		rxDataControlList[rxBufNum] = 1;
+		uint8_t lostPocket = 0;
+		for (uint8_t j=0; j < currPingRx % 256; j++) {
+			if (rxDataControlList[j] == 0) lostPocket++;
+		}
+		snprintf(currLossStr, sizeof(currLossStr), "%d", lostPocket);
+		memset(rxBufNumStr, 0, 50);
+		/* Create current transmit data */
+		currPongTx++;
+		snprintf(currPongTxStr, sizeof(currPongTxStr), "%d", currPongTx);
+		strcat(currTxBuf, pong);
+		strcat(currTxBuf, currPongTxStr);
+		/* Transmit created data */
+		HAL_UART_Transmit(huart, (uint8_t *) currTxBuf, 50, 0xFFFF);
+		/* Display current received data to user */
+		st7789_FillRect(0, 210, 320, 20, WHITE_st7789);
+		st7789_PrintString(20, 210, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, (char *) rxBuf);
+		clearingRXBuf();
+		/* Display RX/TX/LOSS stats to user */
+		strcat(stats, currPingRxStr);
+		strcat(stats, "/");
+		strcat(stats, currPongTxStr);
+		strcat(stats, "/");
+		strcat(stats, currLossStr);
+		st7789_PrintString(160, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, stats);
+	}
 	/* Clearing working memory */
 	memset(stats, 0, 50);
 	memset(currTxBuf, 0, 50);
