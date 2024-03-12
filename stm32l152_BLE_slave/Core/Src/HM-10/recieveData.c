@@ -208,10 +208,10 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 	/* 0 - temp, 1,2 - data, 3 - rssi, 4,5 - data */
 	if (msgType == 5) msgType = 0;
 	/* Create current expected received string */
+	currPingRx++;
 	if (currPingRx % 256 == 0) {
 		memset(rxDataControlList, 0, 255);
 	}
-	currPingRx++;
 	snprintf(currPingRxStr, sizeof(currPingRxStr), "%d", currPingRx);
 	strcat(currRxBuf, ping);
 	strcat(currRxBuf, currPingRxStr);
