@@ -22,8 +22,6 @@
 //---------------------------------------------------------------------------------------------------//
 	uint16_t currPongTx = -1;				// current num of transmitted data
 	uint16_t currPingRx = -1;				// current num of received data
-	uint16_t countOfRxData;					// amount of received data
-	uint16_t countOfTxData;					// amount of transmitted data
 	uint16_t loss = 0;						// current num of lost data
 //---------------------------------------------------------------------------------------------------//
 	const char * pong = "pong";				// const start of transmit massage
@@ -36,7 +34,7 @@
 	char currTxBuf[50];						// sub buffer for check current massage to transmit
 	char currRxBuf[50];						// sub buffer for check current massage to receive
 	char stats[50];							// RX/TX/LOSS stats buffer
-	uint8_t rxDataControlList[255] = {0};	// received Data control list
+	uint8_t rxDataControlList[1024] = {0};	// received Data control list
 //---------------------------------------------------------------------------------------------------//
 	char rxBufNumStr[20];					// sub buffer to control expected receved num and actual
 	uint16_t rxBufNum = 0;					// int of actual received num
@@ -209,8 +207,17 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 	if (msgType == 5) msgType = 0;
 	/* Create current expected received string */
 	currPingRx++;
-	if (currPingRx % 256 == 0) {
-		memset(rxDataControlList, 0, 255);
+	/* Start new cycle if received > 1024 messages */
+	if (currPingRx % 1024 == 0) {
+		memset(rxDataControlList, 0, 1024);
+		memset(stats, 0, 50);
+		memset(currTxBuf, 0, 50);
+		memset(currRxBuf, 0, 50);
+		memset(currPongTxStr, 0, 20);
+		currPongTx = -1;
+		currPingRx = 0;
+		loss = 0;
+		rxBufNum = 0;
 	}
 	snprintf(currPingRxStr, sizeof(currPingRxStr), "%d", currPingRx);
 	strcat(currRxBuf, ping);
@@ -225,7 +232,7 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 		/* Mark received string in rxDataControlList*/
 		rxDataControlList[rxBufNum] = 1;
 		uint8_t lostPocket = 0;
-		for (uint8_t j=0; j < currPingRx % 256; j++) {
+		for (uint8_t j=0; j < currPingRx % 1024; j++) {
 			if (rxDataControlList[j] == 0) lostPocket++;
 		}
 		snprintf(currLossStr, sizeof(currLossStr), "%d", lostPocket);
@@ -244,7 +251,7 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 		/* Mark received string in rxDataControlList*/
 		rxDataControlList[rxBufNum] = 1;
 		uint8_t lostPocket = 0;
-		for (uint8_t j=0; j < currPingRx % 256; j++) {
+		for (uint8_t j=0; j < currPingRx % 1024; j++) {
 			if (rxDataControlList[j] == 0) lostPocket++;
 		}
 		snprintf(currLossStr, sizeof(currLossStr), "%d", lostPocket);
