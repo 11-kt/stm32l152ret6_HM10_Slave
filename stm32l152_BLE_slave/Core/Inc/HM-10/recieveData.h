@@ -19,11 +19,13 @@
 
 extern DMA_HandleTypeDef hdma_uart4_rx;
 
-void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size);
-void clearingRXBuf();
-void connEvent();
-void connLostEvent();
-void getTempRssiEvent();
-void getMsgEvent(UART_HandleTypeDef *huart);
+//--------------------------------------------------------------------------------------------------------------//
+	void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t Size);	// receive data post proc
+	void clearingRXBuf();													// clearing receive data buffer
+	void connEvent();														// successful connection event
+	void connLostEvent();													// lost connection event
+	void getTempRssiEvent();												// get Temperature or RSSI post proc
+	void getMsgEvent(UART_HandleTypeDef *huart);							// get message event
+//--------------------------------------------------------------------------------------------------------------//
 
 #endif /* INC_RECIEVEDATA_H_ */

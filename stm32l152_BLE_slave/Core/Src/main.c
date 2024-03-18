@@ -24,7 +24,7 @@
 #include <string.h>
 #include "HM-10/recieveData.h"
 #include "HM-10/HM10_Setup.h"
-#include "st7789/cmsis_SPI1.h"
+#include "st7789/st7789_Views/st7789_Data_Views.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +44,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 TIM_HandleTypeDef htim2;
-TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart4;
@@ -250,7 +249,7 @@ static void MX_TIM4_Init(void)
   htim4.Instance = TIM4;
   htim4.Init.Prescaler = 31999;
   htim4.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim4.Init.Period = 3000;
+  htim4.Init.Period = 2000;
   htim4.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim4.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim4) != HAL_OK)
@@ -335,11 +334,17 @@ static void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(ble_brk_GPIO_Port, ble_brk_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : btn_Pin */
+  GPIO_InitStruct.Pin = btn_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(btn_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : ble_brk_Pin */
   GPIO_InitStruct.Pin = ble_brk_Pin;
@@ -347,6 +352,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(ble_brk_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
@@ -366,7 +375,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 				case 0:
 					HAL_UART_Transmit(&huart4, getCommand(TEMP_GET), strlen((char *) getCommand(TEMP_GET)), 0xFFFF);
 					break;
-				case 4:
+				case 3:
 					HAL_UART_Transmit(&huart4, getCommand(RSSI_GET), strlen((char *) getCommand(RSSI_GET)), 0xFFFF);
 					break;
 				default:
@@ -376,31 +385,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 	}
 }
 
-void st7789_DrawStartScreen() {
-	st7789_PrintString(20, 70, BLUE_st7789, WHITE_st7789, 1, &font_11x18, 2, "Инициализация");
-	st7789_PrintString(130, 120, BLUE_st7789, WHITE_st7789, 1, &font_11x18, 2, "BLE");
-}
-
-void st7789_DrawErrScreen() {
-	st7789_FillRect(0, 0,  320, 240, WHITE_st7789);
-	st7789_PrintString(50, 90, RED_st7789, WHITE_st7789, 1, &font_11x18, 2, "Ошибка BLE");
-}
-
-void st7789_DrawDataScreen() {
-	st7789_FillRect(0, 0,  320, 240, WHITE_st7789);
-	st7789_PrintString(20, 10, MAGENTA_st7789, WHITE_st7789, 1, &font_11x18, 1, "Slave mode");
-	st7789_PrintString(185, 10, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не сопряжен");
-
-	st7789_PrintString(20, 35, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.C:");
-	st7789_PrintString(20, 55, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальная темп.C:");
-	st7789_PrintString(20, 75, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная темп.C:");
-
-	st7789_PrintString(20, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
-	st7789_PrintString(20, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальный RSSI,dbm:");
-	st7789_PrintString(20, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная RSSI,dbm:");
-
-	st7789_PrintString(20, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "RX/TX/Loss:");
-	st7789_PrintString(20, 185, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщение:");
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if(GPIO_Pin == btn_Pin) {
+		checkConnection(&huart4);
+	}
 }
 
 /* USER CODE END 4 */

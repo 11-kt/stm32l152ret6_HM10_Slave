@@ -55,12 +55,13 @@ extern volatile uint8_t msgType;
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void st7789_DrawStartScreen();
-void st7789_DrawErrScreen();
-void st7789_DrawDataScreen();
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define btn_Pin GPIO_PIN_13
+#define btn_GPIO_Port GPIOC
+#define btn_EXTI_IRQn EXTI15_10_IRQn
 #define ble_brk_Pin GPIO_PIN_12
 #define ble_brk_GPIO_Port GPIOC
 
