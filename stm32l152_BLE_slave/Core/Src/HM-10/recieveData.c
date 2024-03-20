@@ -74,7 +74,7 @@ void UART4_RxCpltCallback(UART_HandleTypeDef *huart, uint16_t size) {
 	}
 	/* if get temperature or RSSI request from connected device */
 	if (strstr ((char *) rxBuf, (char *) "OK+Get") != NULL) {
-		getTempRssiEvent();
+		getRssiEvent();
 	}
 	/* Start new DMA Idle interrupt */
 	HAL_UARTEx_ReceiveToIdle_DMA(huart, (uint8_t *) rxBuf, rxBuf_SIZE);
@@ -129,11 +129,11 @@ void connLostEvent() {
 }
 
 /**
-  * @brief  Get Temperature or RSSI post proc
+  * @brief  Get TRSSI post proc
   * @retval void
  */
-void getTempRssiEvent() {
-	/* Ñolon flag in temp/rssi value string */
+void getRssiEvent() {
+	/* Ñolon flag in rssi value string */
 	uint8_t dotFlag = 0;
 	/* Current char position */
 	uint8_t currentChar = 0;
@@ -145,51 +145,25 @@ void getTempRssiEvent() {
 		if (i > 0 && rxBuf[i - 1] == ':') dotFlag = 1;
 		/* Beginning of temp/rssi values */
 		if (dotFlag) {
-			/* Skipping an insignificant 0 in temp value */
-			if (rxBuf[i] == '0' && currentChar == 0) {}
-			else {
-				res_str[currentChar] = rxBuf[i];
-				currentChar++;
-			}
+			res_str[currentChar] = rxBuf[i];
+			currentChar++;
 		}
 	}
-	/* 0 - temp, 1,2 - data, 3 - rssi, 4,5 - data */
-	/* Current data - temperature value */
-	if (msgType == 0) {
-		/* Current temp value is higher than maxTemp */
-		if (strcmp( maxTemp, res_str ) < 0) {
-			strncpy(maxTemp, res_str, 10);
-			/* Display actual max value */
-			st7789_PrintString(250, 75, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxTemp);
-		}
-		/* Current temp value is lower than minTemp */
-		if (strcmp( minTemp, res_str ) > 0) {
-			strncpy(minTemp, res_str, 10);
-			/* Display actual min value */
-			st7789_PrintString(250, 55, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minTemp);
-		}
-		/* Display actual temp value */
-		st7789_PrintString(250, 35, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
-		msgType++;
+	/* Current RSSI value is higher than maxRSSI */
+	if (strcmp( maxRSSI, res_str ) < 0) {
+		strncpy(maxRSSI, res_str, 10);
+		/* Display actual max value */
+		st7789_PrintString(270, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxRSSI);
 	}
-	/* Current data - RSSI value */
-	else if (msgType == 3) {
-		/* Current RSSI value is higher than maxRSSI */
-		if (strcmp( maxRSSI, res_str ) < 0) {
-			strncpy(maxRSSI, res_str, 10);
-			/* Display actual max value */
-			st7789_PrintString(270, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxRSSI);
-		}
-		/* Current RSSI value is higher than minRSSI */
-		if (strcmp( minRSSI, res_str ) > 0) {
-			strncpy(minRSSI, res_str, 10);
-			/* Display actual min value */
-			st7789_PrintString(270, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minRSSI);
-		}
-		/* Display actual RSSI value */
-		st7789_PrintString(270, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
-		msgType++;
+	/* Current RSSI value is higher than minRSSI */
+	if (strcmp( minRSSI, res_str ) > 0) {
+		strncpy(minRSSI, res_str, 10);
+		/* Display actual min value */
+		st7789_PrintString(270, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minRSSI);
 	}
+	/* Display actual RSSI value */
+	st7789_PrintString(270, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
+	isRSSI++;
 	/* Clear working memory */
 	clearingRXBuf();
 }
@@ -201,9 +175,9 @@ void getTempRssiEvent() {
  */
 void getMsgEvent(UART_HandleTypeDef *huart) {
 	/* Check current data queue */
-	msgType++;
+	isRSSI++;
 	/* 0 - temp, 1,2 - data, 3 - rssi, 4,5 - data */
-	if (msgType == 5) msgType = 0;
+	if (isRSSI == 2) isRSSI = 0;
 	/* Create current expected received string */
 	currPingRx++;
 	/* Start new cycle if received > 1024 messages */
