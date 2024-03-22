@@ -34,14 +34,10 @@ void st7789_DrawDataScreen() {
 	st7789_PrintString(20, 10, MAGENTA_st7789, WHITE_st7789, 1, &font_11x18, 1, "Slave mode");
 	st7789_PrintString(185, 10, BLACK_st7789, RED_st7789, 1, &font_11x18, 1, "Не сопряжен");
 
-	st7789_PrintString(20, 35, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущая темп.C:");
-	st7789_PrintString(20, 55, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальная темп.C:");
-	st7789_PrintString(20, 75, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная темп.C:");
+	st7789_PrintString(20, 40, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
+	st7789_PrintString(20, 80, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальный RSSI,dbm:");
+	st7789_PrintString(20, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная RSSI,dbm:");
 
-	st7789_PrintString(20, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Текущий RSSI,dbm:");
-	st7789_PrintString(20, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Минимальный RSSI,dbm:");
-	st7789_PrintString(20, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Максимальная RSSI,dbm:");
-
-	st7789_PrintString(20, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "RX/TX/Loss:");
+	st7789_PrintString(20, 160, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "RX/TX/Loss:");
 	st7789_PrintString(20, 185, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, "Последнее сообщение:");
 }
