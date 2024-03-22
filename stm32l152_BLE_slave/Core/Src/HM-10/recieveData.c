@@ -153,16 +153,16 @@ void getRssiEvent() {
 	if (strcmp( maxRSSI, res_str ) < 0) {
 		strncpy(maxRSSI, res_str, 10);
 		/* Display actual max value */
-		st7789_PrintString(270, 140, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxRSSI);
+		st7789_PrintString(270, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, maxRSSI);
 	}
 	/* Current RSSI value is higher than minRSSI */
 	if (strcmp( minRSSI, res_str ) > 0) {
 		strncpy(minRSSI, res_str, 10);
 		/* Display actual min value */
-		st7789_PrintString(270, 120, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minRSSI);
+		st7789_PrintString(270, 80, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, minRSSI);
 	}
 	/* Display actual RSSI value */
-	st7789_PrintString(270, 100, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
+	st7789_PrintString(270, 40, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, res_str);
 	isRSSI++;
 	/* Clear working memory */
 	clearingRXBuf();
@@ -219,7 +219,7 @@ void getMsgEvent(UART_HandleTypeDef *huart) {
 		strcat(stats, currPongTxStr);
 		strcat(stats, "/");
 		strcat(stats, currLossStr);
-		st7789_PrintString(160, 165, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, stats);
+		st7789_PrintString(160, 160, BLACK_st7789, WHITE_st7789, 1, &font_11x18, 1, stats);
 	}
 	/* if get new message */
 	else {
